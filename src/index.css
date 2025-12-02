@@ -27,3 +27,26 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .mobile-controls {
+    display: flex !important;
+  }
+
+  .mobile-start-btn,
+  .mobile-restart-btn {
+    display: block !important;
+  }
+}
+
+@media (min-width: 601px) {
+  .mobile-controls {
+    display: none !important;
+  }
+
+  .mobile-start-btn,
+  .mobile-restart-btn {
+    display: none !important;
+  }
+}
