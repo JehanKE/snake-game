@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="#10b981" />
+  
+  <!-- Eyes -->
+  <ellipse cx="180" cy="220" rx="40" ry="60" fill="black" />
+  <ellipse cx="332" cy="220" rx="40" ry="60" fill="black" />
+  
+  <!-- Eye Sparkles -->
+  <circle cx="195" cy="200" r="15" fill="white" />
+  <circle cx="347" cy="200" r="15" fill="white" />
+  
+  <!-- Cheeks -->
+  <circle cx="140" cy="280" r="30" fill="#fca5a5" opacity="0.6" />
+  <circle cx="372" cy="280" r="30" fill="#fca5a5" opacity="0.6" />
+  
+  <!-- Mouth -->
+  <path d="M220 320 Q 256 350 292 320" stroke="black" stroke-width="15" fill="none" stroke-linecap="round" />
+  
+  <!-- Tongue -->
+  <path d="M256 340 Q 256 380 236 400 M 256 340 Q 256 380 276 400" stroke="#ef4444" stroke-width="12" fill="none" stroke-linecap="round" />
+</svg>
