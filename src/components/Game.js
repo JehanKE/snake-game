@@ -1,0 +1,145 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Board from './Board';
+import ScoreBoard from './ScoreBoard';
+import { DIRECTIONS, getRandomFoodPosition, GRID_SIZE, SPEED } from '../utils/gameHelper';
+
+const Game = () => {
+    const [snake, setSnake] = useState([{ x: 10, y: 10 }]);
+    const [food, setFood] = useState({ x: 15, y: 15 });
+    const [direction, setDirection] = useState(DIRECTIONS.RIGHT);
+    const [gameOver, setGameOver] = useState(false);
+    const [score, setScore] = useState(0);
+    const [highScore, setHighScore] = useState(
+        parseInt(localStorage.getItem('snakeHighScore')) || 0
+    );
+    const [isPaused, setIsPaused] = useState(false);
+    const [gameStarted, setGameStarted] = useState(false);
+
+    // Use a ref to track the latest direction to prevent rapid double-key presses causing self-collision
+    const latestDirection = useRef(DIRECTIONS.RIGHT);
+
+    const resetGame = () => {
+        setSnake([{ x: 10, y: 10 }]);
+        setFood(getRandomFoodPosition([{ x: 10, y: 10 }]));
+        setDirection(DIRECTIONS.RIGHT);
+        latestDirection.current = DIRECTIONS.RIGHT;
+        setGameOver(false);
+        setScore(0);
+        setIsPaused(false);
+        setGameStarted(true);
+    };
+
+    const moveSnake = useCallback(() => {
+        if (gameOver || isPaused || !gameStarted) return;
+
+        setSnake((prevSnake) => {
+            const newHead = {
+                x: prevSnake[0].x + direction.x,
+                y: prevSnake[0].y + direction.y,
+            };
+
+            // Check Wall Collision
+            if (
+                newHead.x < 0 ||
+                newHead.x >= GRID_SIZE ||
+                newHead.y < 0 ||
+                newHead.y >= GRID_SIZE
+            ) {
+                setGameOver(true);
+                return prevSnake;
+            }
+
+            // Check Self Collision
+            if (prevSnake.some((segment) => segment.x === newHead.x && segment.y === newHead.y)) {
+                setGameOver(true);
+                return prevSnake;
+            }
+
+            const newSnake = [newHead, ...prevSnake];
+
+            // Check Food Collision
+            if (newHead.x === food.x && newHead.y === food.y) {
+                setScore((prev) => {
+                    const newScore = prev + 1;
+                    if (newScore > highScore) {
+                        setHighScore(newScore);
+                        localStorage.setItem('snakeHighScore', newScore);
+                    }
+                    return newScore;
+                });
+                setFood(getRandomFoodPosition(newSnake));
+            } else {
+                newSnake.pop(); // Remove tail if no food eaten
+            }
+
+            return newSnake;
+        });
+    }, [direction, food, gameOver, highScore, isPaused, gameStarted]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 'a', 's', 'd'].includes(e.key)) {
+                e.preventDefault();
+            }
+
+            if (gameOver && e.key === 'Enter') {
+                resetGame();
+                return;
+            }
+
+            if (!gameStarted && e.key === 'Enter') {
+                setGameStarted(true);
+                return;
+            }
+
+            if (e.key === ' ') {
+                setIsPaused(prev => !prev);
+                return;
+            }
+
+            if (!gameStarted) return;
+
+            const { key } = e;
+            let newDir = null;
+
+            if (key === 'ArrowUp' || key === 'w') newDir = DIRECTIONS.UP;
+            if (key === 'ArrowDown' || key === 's') newDir = DIRECTIONS.DOWN;
+            if (key === 'ArrowLeft' || key === 'a') newDir = DIRECTIONS.LEFT;
+            if (key === 'ArrowRight' || key === 'd') newDir = DIRECTIONS.RIGHT;
+
+            if (newDir) {
+                // Prevent reversing direction
+                if (
+                    (newDir === DIRECTIONS.UP && latestDirection.current === DIRECTIONS.DOWN) ||
+                    (newDir === DIRECTIONS.DOWN && latestDirection.current === DIRECTIONS.UP) ||
+                    (newDir === DIRECTIONS.LEFT && latestDirection.current === DIRECTIONS.RIGHT) ||
+                    (newDir === DIRECTIONS.RIGHT && latestDirection.current === DIRECTIONS.LEFT)
+                ) {
+                    return;
+                }
+                setDirection(newDir);
+                latestDirection.current = newDir;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [gameOver, gameStarted]);
+
+    useEffect(() => {
+        const gameInterval = setInterval(moveSnake, SPEED);
+        return () => clearInterval(gameInterval);
+    }, [moveSnake]);
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <ScoreBoard score={score} highScore={highScore} />
+            <Board snake={snake} food={food} gameOver={gameOver} gameStarted={gameStarted} />
+            <div style={{ marginTop: '20px', color: '#888', fontSize: '0.9rem' }}>
+                {!gameStarted ? 'Press Enter to Start' : 'Use Arrow Keys or WASD to move. Space to Pause.'}
+            </div>
+        </div>
+    );
+};
+
+export default Game;
